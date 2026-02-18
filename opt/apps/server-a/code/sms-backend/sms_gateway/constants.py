@@ -1,0 +1,37 @@
+from enum import Enum
+
+
+class MessageStatus(str, Enum):
+    PENDING = "PENDING"
+    ASSIGNED = "ASSIGNED"
+    SENDING = "SENDING"
+    SENT = "SENT"
+    DELIVERED = "DELIVERED"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
+
+
+class MessagePriority(str, Enum):
+    HIGH = "HIGH"
+    NORMAL = "NORMAL"
+    LOW = "LOW"
+
+
+class AuditAction(str, Enum):
+    CREATE_TEMPLATE = "CREATE_TEMPLATE"
+    APPROVE_TEMPLATE = "APPROVE_TEMPLATE"
+    CREATE_API_KEY = "CREATE_API_KEY"
+    DISABLE_API_KEY = "DISABLE_API_KEY"
+    CREATE_SMS_REQUEST = "CREATE_SMS_REQUEST"
+    AGENT_LEASE_BATCH = "AGENT_LEASE_BATCH"
+    AGENT_REPORT_RESULTS = "AGENT_REPORT_RESULTS"
+
+
+class ActorType(str, Enum):
+    USER = "USER"
+    API_KEY = "API_KEY"
+    AGENT = "AGENT"
+
+
+API_KEY_SCOPE_SEND = "sms:send"
+API_KEY_SCOPE_READ = "sms:read"

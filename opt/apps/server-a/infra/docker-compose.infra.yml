@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:2.11.3
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    environment:
+      TZ: ${TZ}
+      DISABLE_IPV6: "true"
+    volumes:
+      - ./data/npm:/data
+      - ./data/letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy-network
+
+  shared_mongo:
+    image: mongo:7.0
+    container_name: shared_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS}
+      AUTH_DB_PASS: ${AUTH_DB_PASS}
+      SMS_DB_PASS: ${SMS_DB_PASS}
+      SHOP_DB_PASS: ${SHOP_DB_PASS}
+      LAYDI_DB_PASS: ${LAYDI_DB_PASS}
+      CORE_DB_PASS: ${CORE_DB_PASS}
+    volumes:
+      - ./data/mongo:/data/db
+      - ./mongo_init:/docker-entrypoint-initdb.d
+    networks:
+      - infra-network
+
+  shared_redis:
+    image: bitnami/redis:7.2
+    container_name: shared_redis
+    restart: unless-stopped
+    environment:
+      ALLOW_EMPTY_PASSWORD: "no"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - ./data/redis:/bitnami/redis/data
+    networks:
+      - infra-network
+
+networks:
+  proxy-network:
+    external: true
+  infra-network:
+    external: true

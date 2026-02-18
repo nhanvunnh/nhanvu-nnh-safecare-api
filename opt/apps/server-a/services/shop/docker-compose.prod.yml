@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  svc_shop:
+    image: your-registry/shop-service:latest
+    container_name: svc_shop
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    command: gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers 2 --access-logfile - --error-logfile -
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - proxy-network
+      - infra-network
+
+networks:
+  proxy-network:
+    external: true
+  infra-network:
+    external: true
