@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SafeCare Platform API by Nhân Vũ Groups - 2026</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=20260219" sizes="any" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20260219" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0b1220;
+        --card: #ffffff;
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --border: rgba(255, 255, 255, 0.12);
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 10% 10%, rgba(56, 189, 248, 0.18), transparent 60%),
+          radial-gradient(900px 500px at 90% 20%, rgba(99, 102, 241, 0.18), transparent 55%),
+          radial-gradient(900px 500px at 50% 90%, rgba(34, 197, 94, 0.12), transparent 60%), var(--bg);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      .card {
+        width: min(760px, 100%);
+        background: var(--card);
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 16px;
+        padding: 28px 28px 22px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.18);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        letter-spacing: 0.2px;
+        color: #0f172a;
+      }
+      .title {
+        text-align: center;
+        margin: 0px 0 0px;
+      }
+      .title-inner {
+        display: inline-block;
+        max-width: 100%;
+      }
+      .title h1 {
+        margin: 0;
+        text-align: center;
+      }
+      .byline {
+        margin-top: 2px;
+        color: rgba(15, 23, 42, 0.7);
+        font-size: 14px;
+        display: block;
+        width: 100%;
+        text-align: right;
+      }
+      p {
+        margin: 10px 0;
+        line-height: 1.6;
+        color: rgba(15, 23, 42, 0.72);
+        font-size: 15px;
+      }
+      .brand {
+        display: grid;
+        place-items: center;
+        margin: 0 0 12px;
+      }
+      .brand-logo {
+        width: clamp(120px, 34vw, 220px);
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.35));
+      }
+      .meta {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(15, 23, 42, 0.12);
+        display: grid;
+        gap: 8px;
+        font-size: 11px;
+      }
+      .meta-row {
+        margin: 0;
+        line-height: 0.8;
+        display: grid;
+        grid-template-columns: 16px 110px 1fr;
+        column-gap: 8px;
+        align-items: start;
+      }
+      .meta-row::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        margin-top: 1px;
+        background: var(--icon) center / contain no-repeat;
+        opacity: 0.9;
+      }
+      .meta-row strong {
+        color: #0f172a;
+        font-weight: 650;
+        display: inline-block;
+      }
+      .meta-row.meta-company {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M3%2021h18%27/%3E%3Cpath%20d%3D%27M5%2021V7l7-4%207%204v14%27/%3E%3Cpath%20d%3D%27M9%209v1%27/%3E%3Cpath%20d%3D%27M9%2013v1%27/%3E%3Cpath%20d%3D%27M9%2017v1%27/%3E%3Cpath%20d%3D%27M15%209v1%27/%3E%3Cpath%20d%3D%27M15%2013v1%27/%3E%3Cpath%20d%3D%27M15%2017v1%27/%3E%3C/svg%3E");
+      }
+      .meta-row.meta-license {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%202h8l4%204v16H8z%27/%3E%3Cpath%20d%3D%27M16%202v6h6%27/%3E%3Cpath%20d%3D%27M11%2012h6%27/%3E%3Cpath%20d%3D%27M11%2016h6%27/%3E%3C/svg%3E");
+      }
+      .meta-row.meta-address {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%202a7%207%200%200%200-7%207c0%205%207%2013%207%2013s7-8%207-13a7%207%200%200%200-7-7z%27/%3E%3Cpath%20d%3D%27M12%2012a3%203%200%201%200%200-6%203%203%200%200%200%200%206z%27/%3E%3C/svg%3E");
+      }
+      .meta-row.meta-hotline {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M22%2016.9v3a2%202%200%200%201-2.2%202%2019.8%2019.8%200%200%201-8.6-3.1A19.5%2019.5%200%200%201%203.1%2012.8%2019.8%2019.8%200%200%201%200%204.2%202%202%200%200%201%202-2.2h3a2%202%200%200%201%202%201.7c.1.8.3%201.6.6%202.4a2%202%200%200%201-.5%202.1L9.1%209.1a16%2016%200%200%200%205.8%205.8l1.6-1.6a2%202%200%200%201%202.1-.5c.8.3%201.6.5%202.4.6a2%202%200%200%201%201.7%202z%27/%3E%3C/svg%3E");
+      }
+      .meta-row.meta-email {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M4%204h16v16H4z%27/%3E%3Cpath%20d%3D%27m22%206-10%207L2%206%27/%3E%3C/svg%3E");
+      }
+      .meta-row.meta-website {
+        --icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%230f172a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%202a10%2010%200%201%200%2010%2010A10%2010%200%200%200%2012%202z%27/%3E%3Cpath%20d%3D%27M2%2012h20%27/%3E%3Cpath%20d%3D%27M12%202a15%2015%200%200%201%200%2020%2015%2015%200%200%201%200-20z%27/%3E%3C/svg%3E");
+      }
+      @media (max-width: 520px) {
+        body {
+          padding: 14px;
+        }
+        .card {
+          padding: 18px 16px 16px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+        .meta-row {
+          grid-template-columns: 16px 1fr;
+          column-gap: 8px;
+          row-gap: 2px;
+        }
+        .meta-row::before {
+          grid-row: 1 / span 2;
+        }
+        .meta-row strong,
+        .meta-row span {
+          grid-column: 2;
+        }
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 999px;
+        font-size: 12px;
+        color: rgba(15, 23, 42, 0.7);
+        background: rgba(15, 23, 42, 0.04);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <span class="badge">SafeCare - 2026</span>
+      <div class="brand" aria-label="Logo">
+        <img
+          class="brand-logo"
+          alt="Nhân Vũ Groups"
+          src="/logo.png"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>      
+      <div class="title" aria-label="Tiêu đề">
+        <div class="title-inner">
+          <h1>SafeCare Platform API</h1>
+          <div class="byline">By Nhân Vũ Groups</div>
+        </div>
+      </div>
+      <p>
+        SafeCare Platform API là hệ thống quản lý và điều phối API đa kết nối, đóng vai trò trung tâm tích hợp, xác thực và kết nối các dịch vụ trong hệ sinh thái SafeCare
+      </p>
+      <section class="meta" aria-label="Thông tin">
+        <p class="meta-row meta-company"><strong>Công ty:</strong><span>CÔNG TY TNHH ĐẦU TƯ VÀ PHÁT TRIỂN NHÂN VŨ</span></p>
+        <p class="meta-row meta-license"><strong>GPKD số:</strong><span>0310675669 (Sở KH &amp; ĐT TP.HCM, 09/12/2014)</span></p>
+        <p class="meta-row meta-address"><strong>Địa chỉ:</strong><span>1012 Tạ Quang Bửu, Phường Bình Đông, TP.HCM</span></p>
+        <p class="meta-row meta-hotline"><strong>Hotline:</strong><span>0777.247.111 - 0777.247.112 - 0975.966.366</span></p>
+        <p class="meta-row meta-email"><strong>Email:</strong><span>nhanvuco@gmail.com - info@nhanvu.com</span></p>
+        <p class="meta-row meta-website"><strong>Website:</strong><span>www.nhanvu.com - www.safecare.vn - www.laydi.vn</span></p>
+      </section>
+    </main>
+  </body>
+</html>

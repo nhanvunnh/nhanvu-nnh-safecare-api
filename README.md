@@ -2,6 +2,11 @@
 
 Hệ thống Server A phục vụ domain `api.safecare.vn` với MongoDB dùng chung, Redis nền tảng, các service Django/Gunicorn (auth, sms, shop, laydi, core) và Nginx Proxy Manager (NPM) path-based routing.
 
+## API docs
+
+- `docs/api-auth.md`
+- `docs/api-sms.md`
+
 ## Directory layout
 
 ```
@@ -80,7 +85,7 @@ Mỗi service có một compose file riêng trong thư mục tương ứng, ví 
 
 - `APP_NAME`, `APP_ENV=production`.
 - `BASE_PATH`/`FORCE_SCRIPT_NAME` = `/auth`, `/sms`, `/shop`, `/laydi`, `/core` tương ứng.
-- `MONGO_URI` dạng `mongodb://<user>:<pass>@shared_mongo:27017/<db>?authSource=admin`.
+- `MONGO_URI` dạng `mongodb://<user>:<pass>@shared_mongo:27017/<db>?authSource=<db>` (vì user được tạo trong chính DB app như `db_auth`, `db_sms`).
 - `REDIS_URL` tùy chọn `redis://:password@shared_redis:6379/<db-index>`.
 - `ALLOWED_HOSTS` = `api.safecare.vn`, `CSRF_TRUSTED_ORIGINS = https://api.safecare.vn`.
 - `SECURE_PROXY_SSL_HEADER`, `USE_X_FORWARDED_HOST`, `TRUST_X_FORWARDED_PROTO` bật để nhận header từ NPM.

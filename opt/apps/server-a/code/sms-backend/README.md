@@ -40,7 +40,7 @@ ALLOWED_HOSTS=api.safecare.vn
 CSRF_TRUSTED_ORIGINS=https://api.safecare.vn
 SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,https
 USE_X_FORWARDED_HOST=true
-MONGO_URI=mongodb://sms_user:***@shared_mongo:27017/db_sms?authSource=admin
+MONGO_URI=mongodb://sms_user:***@shared_mongo:27017/db_sms?authSource=db_sms
 MONGO_DB=db_sms
 JWT_SECRET=***
 JWT_ACCESS_MINUTES=240

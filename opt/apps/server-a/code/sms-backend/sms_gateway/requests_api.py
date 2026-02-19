@@ -257,4 +257,3 @@ class SmsMessageListView(APIView):
         )
         messages = [serialize_message(doc) for doc in cursor]
         return Response({"items": messages, "count": len(messages)})
-*** End Patch

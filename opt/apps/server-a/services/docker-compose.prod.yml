@@ -1,0 +1,108 @@
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:2.11.3
+    container_name: npm
+    restart: unless-stopped
+    env_file:
+      - ../infra/.env.infra
+    ports:
+      - "8090:80"
+      - "8443:443"
+      - "81:81"
+    environment:
+      DISABLE_IPV6: "true"
+    volumes:
+      - ../infra/data/npm:/data
+      - ../infra/data/letsencrypt:/etc/letsencrypt
+      - ../infra/npm_default_site:/var/www/html:ro
+      - ../infra/npm_default_site/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - proxy-network
+
+  shared_mongo:
+    image: mongo:7.0
+    container_name: shared_mongo
+    restart: unless-stopped
+    env_file:
+      - ../infra/.env.infra
+    volumes:
+      - ../infra/data/mongo:/data/db
+      - ../infra/mongo_init:/docker-entrypoint-initdb.d
+    networks:
+      - infra-network
+
+  shared_redis:
+    image: redis:7.2-alpine
+    container_name: shared_redis
+    restart: unless-stopped
+    env_file:
+      - ../infra/.env.infra
+    command: ["sh", "-c", "redis-server --requirepass \"$$REDIS_PASSWORD\" --appendonly yes"]
+    volumes:
+      - ../infra/data/redis:/data
+    networks:
+      - infra-network
+
+  auth:
+    build:
+      context: ../code/auth-backend
+      dockerfile: Dockerfile
+    container_name: svc_auth
+    restart: unless-stopped
+    env_file:
+      - ./auth/.env
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py create_indexes &&
+             python manage.py seed_defaults &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
+    expose:
+      - "8000"
+    depends_on:
+      shared_mongo:
+        condition: service_started
+      shared_redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Host: $$(echo $$ALLOWED_HOSTS | cut -d, -f1)\" http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-network
+      - infra-network
+
+  sms:
+    build:
+      context: ../code/sms-backend
+      dockerfile: Dockerfile
+    container_name: svc_sms
+    restart: unless-stopped
+    env_file:
+      - ./sms/.env
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py create_indexes &&
+             python manage.py seed_admin &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
+    expose:
+      - "8000"
+    depends_on:
+      shared_mongo:
+        condition: service_started
+      shared_redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Host: $$(echo $$ALLOWED_HOSTS | cut -d, -f1)\" http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-network
+      - infra-network
+
+networks:
+  proxy-network:
+    external: true
+  infra-network:
+    external: true
