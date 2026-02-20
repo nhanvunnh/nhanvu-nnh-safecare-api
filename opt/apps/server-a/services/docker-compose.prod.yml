@@ -101,6 +101,31 @@ services:
       - proxy-network
       - infra-network
 
+  image:
+    build:
+      context: ../code/image-backend
+      dockerfile: Dockerfile
+    container_name: svc_image
+    restart: unless-stopped
+    env_file:
+      - ./image/.env
+    command: >
+      sh -c "python manage.py create_indexes &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
+    expose:
+      - "8000"
+    depends_on:
+      shared_mongo:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Host: $$(echo $$ALLOWED_HOSTS | cut -d, -f1)\" http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-network
+      - infra-network
+
 networks:
   proxy-network:
     external: true

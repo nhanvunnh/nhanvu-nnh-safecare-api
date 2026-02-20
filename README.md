@@ -76,7 +76,7 @@ chmod +x deploy_infra.sh
 
 Script sẽ đảm bảo network tồn tại, load `.env.infra`, `docker compose pull`, sau đó `up -d`.
 
-## Service stacks (auth, sms, shop, laydi, core)
+## Service stacks (auth, sms, shop, laydi, core, image)
 
 Mỗi service có một compose file riêng trong thư mục tương ứng, ví dụ [opt/apps/server-a/services/auth/docker-compose.prod.yml](opt/apps/server-a/services/auth/docker-compose.prod.yml).
 
@@ -93,7 +93,7 @@ Mỗi service có một compose file riêng trong thư mục tương ứng, ví 
 .env mẫu cho từng service (ví dụ [opt/apps/server-a/services/auth/.env](opt/apps/server-a/services/auth/.env)) đã bao gồm các biến chuẩn:
 
 - `APP_NAME`, `APP_ENV=production`.
-- `BASE_PATH`/`FORCE_SCRIPT_NAME` = `/auth`, `/sms`, `/shop`, `/laydi`, `/core` tương ứng.
+- `BASE_PATH`/`FORCE_SCRIPT_NAME` = `/auth`, `/sms`, `/shop`, `/laydi`, `/core`, `/image` tương ứng.
 - `MONGO_URI` dạng `mongodb://<user>:<pass>@shared_mongo:27017/<db>?authSource=<db>` (vì user được tạo trong chính DB app như `db_auth`, `db_sms`).
 - `REDIS_URL` tùy chọn `redis://:password@shared_redis:6379/<db-index>`.
 - `ALLOWED_HOSTS` = `api.safecare.vn`, `CSRF_TRUSTED_ORIGINS = https://api.safecare.vn`.
@@ -107,7 +107,7 @@ Command Gunicorn mặc định: `gunicorn app.wsgi:application --bind 0.0.0.0:80
 ```bash
 cd opt/apps/server-a/deploy
 chmod +x deploy_service.sh
-./deploy_service.sh auth   # hoặc sms|shop|laydi|core
+./deploy_service.sh auth   # hoặc sms|shop|laydi|core|image
 ```
 
 Script tạo network nếu thiếu, đảm bảo `.env` tồn tại, rồi `docker compose pull` + `up -d --remove-orphans` cho service tương ứng.
@@ -123,12 +123,13 @@ Tạo một Proxy Host `api.safecare.vn` trong NPM:
 1. Forward host/port mặc định có thể trỏ tạm `svc_core:8000`.
 2. Request Let’s Encrypt, bật Force SSL + HTTP/2.
 3. Bật các header pass-through: `Host`, `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Real-IP`.
-4. Trong tab Custom Locations, thêm:
-   - `/auth` → `svc_auth:8000`
-   - `/sms` → `svc_sms:8000`
-   - `/shop` → `svc_shop:8000`
-   - `/laydi` → `svc_laydi:8000`
-   - `/core` → `svc_core:8000`
+4. Trong tab Custom Locations, them:
+   - /auth -> svc_auth:8000
+   - /sms -> svc_sms:8000
+   - /shop -> svc_shop:8000
+   - /laydi -> svc_laydi:8000
+   - /core -> svc_core:8000
+   - /image -> svc_image:8000
 5. Nếu framework không hỗ trợ prefix, bật rewrite `/prefix/(.*) → /$1` (NPM UI > Advanced > `rewrite ^/auth/(.*)$ /$1 break;`).
 
 Port 81 (UI) nên hạn chế bằng firewall/SG.
@@ -152,3 +153,6 @@ Port 81 (UI) nên hạn chế bằng firewall/SG.
 - `curl https://api.safecare.vn/sms/health` xác nhận service SMS hoạt động qua NPM rewrite `/sms`.
 - Nếu service không thấy Mongo, kiểm tra network attach (`docker network inspect infra-network`).
 - Kiểm tra logs NPM tại container `npm` nếu SSL hoặc rewrite không hoạt động.
+
+
+

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $(basename "$0") <auth|sms|shop|laydi|core>" >&2
+  echo "Usage: $(basename "$0") <auth|sms|shop|laydi|core|image>" >&2
   exit 1
 fi
 
@@ -15,7 +15,7 @@ COMPOSE_FILE="${SERVICE_DIR}/docker-compose.prod.yml"
 PROJECT_NAME="servera_${SERVICE_NAME}"
 
 case "${SERVICE_NAME}" in
-  auth|sms|shop|laydi|core)
+  auth|sms|shop|laydi|core|image)
     ;;
   *)
     echo "Unknown service '${SERVICE_NAME}'." >&2

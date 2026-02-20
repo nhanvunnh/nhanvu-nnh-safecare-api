@@ -3,7 +3,8 @@ const apps = [
   { dbName: "db_sms", user: "sms_user", passEnv: "SMS_DB_PASS" },
   { dbName: "db_shop", user: "shop_user", passEnv: "SHOP_DB_PASS" },
   { dbName: "db_laydi", user: "laydi_user", passEnv: "LAYDI_DB_PASS" },
-  { dbName: "db_core", user: "core_user", passEnv: "CORE_DB_PASS" }
+  { dbName: "db_core", user: "core_user", passEnv: "CORE_DB_PASS" },
+  { dbName: "db_image", user: "image_user", passEnv: "IMAGE_DB_PASS" }
 ];
 
 apps.forEach(({ dbName, user, passEnv }) => {
