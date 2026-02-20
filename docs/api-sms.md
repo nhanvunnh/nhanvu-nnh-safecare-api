@@ -50,6 +50,22 @@ SMS backend há»— trá»£ 3 kiá»ƒu principal:
 - `POST /admin/api-keys/{key_id}/disable`
 - Response: `{"status":"ok"}`
 
+### List registered agents/devices
+
+- `GET /admin/agents` (JWT required)
+- Query (optional):
+  - `is_active=1|0|true|false`
+- Response:
+  - `{"items":[{"agent_id":"...","device_id":"...","label":"...","is_active":true,"last_seen_at":"..."}], "count": 1}`
+
+### Unregister/deactivate device
+
+- `POST /admin/agents/{agent_id}/unregister` (JWT required)
+- Body (optional):
+  - `reason` (string)
+- Response:
+  - `{"status":"ok","agent":{...}}`
+
 ### Get registration secret
 
 - `GET /admin/agent/registration-secret` (JWT required)

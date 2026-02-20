@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .admin_api import AgentRegistrationSecretView, ApiKeyDisableView, ApiKeyListCreateView
+from .admin_api import AgentListView, AgentRegistrationSecretView, AgentUnregisterView, ApiKeyDisableView, ApiKeyListCreateView
 from .agent_api import AgentHeartbeatView, AgentJobsNextView, AgentRegisterView, AgentReportView
 from .reports_api import ReportsExportView, ReportsSummaryView
 from .requests_api import SmsMessageAllListView, SmsMessageListView, SmsRequestCreateView, SmsRequestDetailView
@@ -11,6 +11,8 @@ urlpatterns = [
     path("health", HealthView.as_view(), name="health"),
     path("admin/api-keys", ApiKeyListCreateView.as_view(), name="api-keys"),
     path("admin/api-keys/<str:key_id>/disable", ApiKeyDisableView.as_view(), name="api-key-disable"),
+    path("admin/agents", AgentListView.as_view(), name="agents-list"),
+    path("admin/agents/<str:agent_id>/unregister", AgentUnregisterView.as_view(), name="agent-unregister"),
     path("admin/agent/registration-secret", AgentRegistrationSecretView.as_view(), name="agent-registration-secret"),
     path("templates", TemplateListCreateView.as_view(), name="templates"),
     path("templates/<str:template_id>", TemplateDetailView.as_view(), name="template-detail"),

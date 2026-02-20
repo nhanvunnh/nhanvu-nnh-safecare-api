@@ -71,9 +71,19 @@ class AgentRegisterView(APIView):
         if existing:
             if rotate_token:
                 plain_token = generate_token(24)
+                update_fields = {
+                    "token_hash": sha256_hex(plain_token),
+                    "is_active": True,
+                    "updated_at": now,
+                    "last_seen_at": now,
+                }
+                if label:
+                    update_fields["label"] = label
+                if payload.get("capabilities") is not None:
+                    update_fields["capabilities"] = payload.get("capabilities")
                 agents.update_one(
                     {"_id": existing["_id"]},
-                    {"$set": {"token_hash": sha256_hex(plain_token), "updated_at": now}},
+                    {"$set": update_fields},
                 )
                 return Response(
                     {"status": "rotated", "agent_id": str(existing["_id"]), "agent_token": plain_token},

@@ -80,6 +80,8 @@ AGENT_REGISTRATION_SECRET=<optional shared secret for new agents>
 - `GET /sms/health` - health check
 - `GET /sms/admin/agent/registration-secret` - get current `registration_secret` (JWT required)
 - `PUT /sms/admin/agent/registration-secret` - create/update `registration_secret` in DB (JWT required)
+- `GET /sms/admin/agents` - list registered agents/devices (JWT required)
+- `POST /sms/admin/agents/{agent_id}/unregister` - unregister/deactivate an agent device (JWT required)
 - `POST /sms/admin/api-keys` - create API key (JWT required)
 - `POST /sms/agent/register` - register/rotate agent token (optional `registration_secret`, existing `device_id` rotates by default; send `rotate_token=false` to skip)
 - `POST /sms/templates` - create template (JWT required)
@@ -127,7 +129,26 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
      -d '{"registration_secret":""}'
    ```
 
-4. **Agent register (get AGENT_ID + AGENT_TOKEN)**
+4. **List registered agents/devices (JWT)**
+   ```bash
+   curl -X GET "http://localhost:8000/sms/admin/agents" \
+     -H "Authorization: Bearer $JWT"
+
+   # Optional filter by active flag
+   curl -X GET "http://localhost:8000/sms/admin/agents?is_active=1" \
+     -H "Authorization: Bearer $JWT"
+   ```
+
+5. **Unregister a device (JWT)**
+   ```bash
+   # Replace $AGENT_ID with an existing ID from step 4.
+   curl -X POST "http://localhost:8000/sms/admin/agents/$AGENT_ID/unregister" \
+     -H "Authorization: Bearer $JWT" \
+     -H "Content-Type: application/json" \
+     -d '{"reason":"device replaced"}'
+   ```
+
+6. **Agent register (get AGENT_ID + AGENT_TOKEN)**
    ```bash
    AGENT_REGISTER_JSON=$(curl -s -X POST http://localhost:8000/sms/agent/register \
      -H "Content-Type: application/json" \
@@ -136,7 +157,7 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
    AGENT_TOKEN=$(echo "$AGENT_REGISTER_JSON" | jq -r '.agent_token')
    ```
 
-5. **Create + approve template (JWT)**
+7. **Create + approve template (JWT)**
    ```bash
    TEMPLATE_ID=$(curl -s -X POST http://localhost:8000/sms/templates \
      -H "Authorization: Bearer $JWT" \
@@ -147,7 +168,7 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
      -H "Authorization: Bearer $JWT"
    ```
 
-6. **Send SMS request (API key)**
+8. **Send SMS request (API key)**
    ```bash
    curl -X POST http://localhost:8000/sms/requests \
      -H "X-API-Key: $API_KEY" \
@@ -159,7 +180,7 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
         }'
    ```
 
-7. **Get request detail + list by request**
+9. **Get request detail + list by request**
    ```bash
    REQUEST_ID=$(curl -s -X POST http://localhost:8000/sms/requests \
      -H "X-API-Key: $API_KEY" \
@@ -177,7 +198,7 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
      -H "X-API-Key: $API_KEY"
    ```
 
-8. **List all messages (new endpoint)**
+10. **List all messages (new endpoint)**
    ```bash
    # API key: only messages belonging to this key
    curl -X GET "http://localhost:8000/sms/messages/all?limit=50&skip=0&status=PENDING" \
@@ -188,7 +209,7 @@ Assume you already obtained a JWT (`$JWT`) from auth-service and you are running
      -H "Authorization: Bearer $JWT"
    ```
 
-9. **Agent lease / report**
+11. **Agent lease / report**
    ```bash
    curl -X GET "http://localhost:8000/sms/agent/jobs/next?limit=10" \
      -H "Authorization: Bearer $AGENT_TOKEN"

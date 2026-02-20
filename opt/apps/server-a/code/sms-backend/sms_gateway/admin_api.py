@@ -1,7 +1,9 @@
 from typing import Any, Dict, List
 
 from bson import ObjectId
+from bson.errors import InvalidId
 from django.conf import settings
+from pymongo import ReturnDocument
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,6 +23,23 @@ def serialize_api_key(doc: Dict[str, Any]) -> Dict[str, Any]:
         "rate_limit_per_day": doc.get("rate_limit_per_day"),
         "is_active": doc.get("is_active", True),
         "created_at": doc.get("created_at").isoformat() if doc.get("created_at") else None,
+    }
+
+
+def serialize_agent(doc: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "agent_id": str(doc.get("_id")),
+        "device_id": doc.get("device_id"),
+        "label": doc.get("label"),
+        "capabilities": doc.get("capabilities"),
+        "rate_limit_per_min": doc.get("rate_limit_per_min"),
+        "is_active": doc.get("is_active", True),
+        "status": doc.get("status"),
+        "battery_level": doc.get("battery_level"),
+        "app_version": doc.get("app_version"),
+        "last_seen_at": doc.get("last_seen_at").isoformat() if doc.get("last_seen_at") else None,
+        "created_at": doc.get("created_at").isoformat() if doc.get("created_at") else None,
+        "updated_at": doc.get("updated_at").isoformat() if doc.get("updated_at") else None,
     }
 
 
@@ -61,6 +80,60 @@ class ApiKeyListCreateView(APIView):
         response = serialize_api_key(doc)
         response["plain_key"] = plain_key
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+class AgentListView(APIView):
+    permission_classes = [JWTOnlyPermission]
+
+    def get(self, request):
+        is_active = request.query_params.get("is_active")
+        query: Dict[str, Any] = {}
+        if is_active in {"1", "true", "True"}:
+            query["is_active"] = True
+        elif is_active in {"0", "false", "False"}:
+            query["is_active"] = False
+
+        docs = list(get_collection("agents").find(query).sort("created_at", -1))
+        return Response({"items": [serialize_agent(doc) for doc in docs], "count": len(docs)})
+
+
+class AgentUnregisterView(APIView):
+    permission_classes = [JWTOnlyPermission]
+
+    def post(self, request, agent_id: str):
+        try:
+            agent_oid = ObjectId(agent_id)
+        except InvalidId:
+            return Response({"detail": "Invalid agent_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        payload = request.data or {}
+        reason = payload.get("reason")
+        now = now_utc()
+        update_fields: Dict[str, Any] = {
+            "is_active": False,
+            "status": "unregistered",
+            "unregistered_at": now,
+            "unregistered_by": getattr(request.user, "username", "user"),
+            "updated_at": now,
+        }
+        if reason:
+            update_fields["unregister_reason"] = str(reason)
+
+        doc = get_collection("agents").find_one_and_update(
+            {"_id": agent_oid},
+            {"$set": update_fields},
+            return_document=ReturnDocument.AFTER,
+        )
+        if not doc:
+            return Response({"detail": "Agent not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        write_audit_log(
+            ActorType.USER,
+            request.user.user_id,
+            AuditAction.UNREGISTER_AGENT,
+            {"agent_id": agent_id, "reason": reason},
+        )
+        return Response({"status": "ok", "agent": serialize_agent(doc)})
 
 
 class ApiKeyDisableView(APIView):
