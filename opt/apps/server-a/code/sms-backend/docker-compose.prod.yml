@@ -8,7 +8,8 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "python manage.py create_indexes &&
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py create_indexes &&
              python manage.py seed_admin &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
     networks:

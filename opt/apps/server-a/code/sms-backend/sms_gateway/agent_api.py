@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .auth import AgentOnlyPermission, AgentTokenAuthentication
+from .config_store import get_registration_secret
 from .constants import ActorType, AuditAction, MessageStatus
 from .mongo import get_collection
 from .utils import ensure_uuid, generate_token, now_utc, sha256_hex, write_audit_log
@@ -61,12 +62,14 @@ class AgentRegisterView(APIView):
             agents.update_one({"_id": ObjectId(principal.agent_id)}, {"$set": update})
             return Response({"status": "ok", "agent_id": principal.agent_id})
 
-        if settings.AGENT_REGISTRATION_SECRET:
-            if payload.get("registration_secret") != settings.AGENT_REGISTRATION_SECRET:
+        registration_secret = get_registration_secret()
+        if registration_secret:
+            if payload.get("registration_secret") != registration_secret:
                 return Response({"detail": "registration_secret invalid"}, status=status.HTTP_403_FORBIDDEN)
 
+        rotate_token = payload.get("rotate_token") not in {False, "0", 0, "false", "False"}
         if existing:
-            if payload.get("rotate_token") in {True, "1", 1, "true"}:
+            if rotate_token:
                 plain_token = generate_token(24)
                 agents.update_one(
                     {"_id": existing["_id"]},
@@ -126,12 +129,14 @@ class AgentJobsNextView(APIView):
         lease_seconds = settings.LEASE_SECONDS
         lease_until = now + timedelta(seconds=lease_seconds)
         collection = get_collection("sms_messages")
+        current_agent_id = request.user.agent_id
         messages: List[Dict[str, Any]] = []
         for _ in range(limit):
             doc = collection.find_one_and_update(
                 {
                     "$or": [
                         {
+                            "agent_id": current_agent_id,
                             "status": MessageStatus.PENDING.value,
                             "$or": [
                                 {"schedule_at": None},
@@ -140,6 +145,7 @@ class AgentJobsNextView(APIView):
                             ],
                         },
                         {
+                            "agent_id": current_agent_id,
                             "status": {"$in": [MessageStatus.ASSIGNED.value, MessageStatus.SENDING.value]},
                             "lease_until": {"$lte": now},
                         },
@@ -148,7 +154,7 @@ class AgentJobsNextView(APIView):
                 {
                     "$set": {
                         "status": MessageStatus.ASSIGNED.value,
-                        "agent_id": request.user.agent_id,
+                        "agent_id": current_agent_id,
                         "lease_until": lease_until,
                         "updated_at": now,
                     },

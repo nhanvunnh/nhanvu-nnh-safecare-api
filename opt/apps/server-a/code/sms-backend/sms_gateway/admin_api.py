@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .auth import JWTOnlyPermission
+from .config_store import get_registration_secret, set_registration_secret
 from .constants import ActorType, AuditAction
 from .mongo import get_collection
 from .utils import generate_token, now_utc, sha256_hex, write_audit_log
@@ -74,3 +75,47 @@ class ApiKeyDisableView(APIView):
             return Response({"detail": "API key not found"}, status=status.HTTP_404_NOT_FOUND)
         write_audit_log(ActorType.USER, request.user.user_id, AuditAction.DISABLE_API_KEY, {"api_key_id": key_id})
         return Response({"status": "ok"})
+
+
+class AgentRegistrationSecretView(APIView):
+    permission_classes = [JWTOnlyPermission]
+
+    def get(self, request):
+        secret = get_registration_secret()
+        write_audit_log(
+            ActorType.USER,
+            request.user.user_id,
+            AuditAction.GET_AGENT_REGISTRATION_SECRET,
+            {"configured": bool(secret)},
+        )
+        return Response(
+            {
+                "registration_secret": secret,
+                "configured": bool(secret),
+            }
+        )
+
+    def put(self, request):
+        payload = request.data or {}
+        secret = payload.get("registration_secret")
+        if secret is None:
+            return Response({"detail": "registration_secret required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(secret, str):
+            return Response({"detail": "registration_secret must be string"}, status=status.HTTP_400_BAD_REQUEST)
+        if secret and len(secret) < 8:
+            return Response({"detail": "registration_secret must be at least 8 chars"}, status=status.HTTP_400_BAD_REQUEST)
+
+        updated = set_registration_secret(secret.strip(), getattr(request.user, "username", "user"))
+        write_audit_log(
+            ActorType.USER,
+            request.user.user_id,
+            AuditAction.UPDATE_AGENT_REGISTRATION_SECRET,
+            {"configured": bool(updated)},
+        )
+        return Response(
+            {
+                "status": "ok",
+                "registration_secret": updated,
+                "configured": bool(updated),
+            }
+        )

@@ -79,11 +79,14 @@ class SmsRequestCreateView(APIView):
         principal = request.user
         payload = request.data or {}
         template_id = payload.get("template_id")
+        raw_agent_id = payload.get("agent_id")
         messages_payload = payload.get("messages") or []
         default_vars = payload.get("variables") or {}
         default_priority = resolve_priority(payload.get("priority"))
         if not template_id or not messages_payload:
             return Response({"detail": "template_id and messages are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not raw_agent_id:
+            return Response({"detail": "agent_id is required"}, status=status.HTTP_400_BAD_REQUEST)
         if len(messages_payload) > settings.MAX_RECIPIENTS_PER_REQUEST:
             return Response({"detail": "Too many recipients"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -91,10 +94,18 @@ class SmsRequestCreateView(APIView):
             template_oid = ObjectId(template_id)
         except InvalidId:
             return Response({"detail": "Invalid template_id"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            agent_oid = ObjectId(raw_agent_id)
+        except InvalidId:
+            return Response({"detail": "Invalid agent_id"}, status=status.HTTP_400_BAD_REQUEST)
 
         template = get_collection("templates").find_one({"_id": template_oid})
         if not template or not template.get("approved"):
             return Response({"detail": "Template not approved"}, status=status.HTTP_400_BAD_REQUEST)
+        agent = get_collection("agents").find_one({"_id": agent_oid, "is_active": True})
+        if not agent:
+            return Response({"detail": "Agent not found or inactive"}, status=status.HTTP_400_BAD_REQUEST)
+        agent_id = str(agent_oid)
 
         now = now_utc()
         day_bucket = now.strftime("%Y-%m-%d")
@@ -146,7 +157,7 @@ class SmsRequestCreateView(APIView):
                     "priority": priority,
                     "priority_weight": PRIORITY_ORDER.get(priority, 1),
                     "lease_until": None,
-                    "agent_id": None,
+                    "agent_id": agent_id,
                     "attempts": 0,
                     "last_error": "DUPLICATE_RECENT" if duplicate else None,
                     "created_at": now,
@@ -171,6 +182,7 @@ class SmsRequestCreateView(APIView):
             "api_key_id": principal._id,
             "client_name": principal.client_name,
             "template_id": template_id,
+            "agent_id": agent_id,
             "total_created": accepted,
             "total_skipped": duplicate_count,
             "total_accepted": accepted,
@@ -186,6 +198,7 @@ class SmsRequestCreateView(APIView):
             AuditAction.CREATE_SMS_REQUEST,
             {
                 "request_id": request_id,
+                "agent_id": agent_id,
                 "total_created": accepted,
                 "total_skipped": duplicate_count,
             },
@@ -194,6 +207,7 @@ class SmsRequestCreateView(APIView):
         return Response(
             {
                 "request_id": request_id,
+                "agent_id": agent_id,
                 "total_created": accepted,
                 "total_skipped": duplicate_count,
             },
@@ -219,6 +233,7 @@ class SmsRequestDetailView(APIView):
         response = {
             "request_id": request_doc.get("request_id"),
             "template_id": request_doc.get("template_id"),
+            "agent_id": request_doc.get("agent_id"),
             "total_created": request_doc.get("total_created", 0),
             "total_skipped": request_doc.get("total_skipped", 0),
             "created_at": request_doc.get("created_at").isoformat() if request_doc.get("created_at") else None,
@@ -244,6 +259,44 @@ class SmsMessageListView(APIView):
         query: Dict[str, Any] = {"request_id": request_id}
         if status_filter:
             query["status"] = status_filter
+
+        if isinstance(request.user, ApiKeyPrincipal):
+            query["api_key_id"] = request.user._id
+
+        cursor = (
+            get_collection("sms_messages")
+            .find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort("created_at")
+        )
+        messages = [serialize_message(doc) for doc in cursor]
+        return Response({"items": messages, "count": len(messages)})
+
+
+class SmsMessageAllListView(APIView):
+    permission_classes = [JwtOrApiKeyReadPermission]
+
+    def get(self, request):
+        status_filter = request.query_params.get("status")
+        request_id = request.query_params.get("request_id")
+        agent_id = request.query_params.get("agent_id")
+        phone = request.query_params.get("to")
+        try:
+            limit = min(int(request.query_params.get("limit", 50)), 500)
+            skip = int(request.query_params.get("skip", 0))
+        except ValueError:
+            return Response({"detail": "limit/skip must be integers"}, status=status.HTTP_400_BAD_REQUEST)
+
+        query: Dict[str, Any] = {}
+        if status_filter:
+            query["status"] = status_filter
+        if request_id:
+            query["request_id"] = request_id
+        if agent_id:
+            query["agent_id"] = agent_id
+        if phone:
+            query["to"] = phone
 
         if isinstance(request.user, ApiKeyPrincipal):
             query["api_key_id"] = request.user._id

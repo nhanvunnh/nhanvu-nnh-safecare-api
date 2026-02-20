@@ -7,6 +7,15 @@ Hệ thống Server A phục vụ domain `api.safecare.vn` với MongoDB dùng c
 - `docs/api-auth.md`
 - `docs/api-sms.md`
 
+## Backend URL cố định
+
+- Dev: `http://192.168.1.5:8090`
+- Prod: `https://api.safecare.vn`
+
+## Deploy guides
+
+- `LIGHTSAIL_UBUNTU_DEPLOY_GUIDE.md`
+
 ## Directory layout
 
 ```

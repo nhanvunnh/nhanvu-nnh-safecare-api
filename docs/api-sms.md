@@ -1,35 +1,40 @@
-# SMS Module API (sms-backend)
+﻿# SMS Module API (sms-backend)
 
-Các endpoint dưới đây là đường dẫn **tại root của service**. Khi đi qua Nginx Proxy Manager (path-based routing), thường sẽ map dưới prefix `/sms`, ví dụ: `/sms/health`, `/sms/templates`, ...
+Backend URL cá»‘ Ä‘á»‹nh:
+
+- Dev: `http://192.168.1.5:8090`
+- Prod: `https://api.safecare.vn`
+
+CÃ¡c endpoint dÆ°á»›i Ä‘Ã¢y lÃ  Ä‘Æ°á»ng dáº«n **táº¡i root cá»§a service**. Khi Ä‘i qua Nginx Proxy Manager (path-based routing), thÆ°á»ng sáº½ map dÆ°á»›i prefix `/sms`, vÃ­ dá»¥: `/sms/health`, `/sms/templates`, ...
 
 ## Authentication
 
-SMS backend hỗ trợ 3 kiểu principal:
+SMS backend há»— trá»£ 3 kiá»ƒu principal:
 
 1) **JWT user** (cho admin/operator):
-   - Header: `Authorization: Bearer <jwt>` (token có dấu `.`)
-   - Dùng cho: templates, reports, quản lý API key.
+   - Header: `Authorization: Bearer <jwt>` (token cÃ³ dáº¥u `.`)
+   - DÃ¹ng cho: templates, reports, quáº£n lÃ½ API key.
 
-2) **API Key principal** (cho client gửi/tra cứu SMS):
+2) **API Key principal** (cho client gá»­i/tra cá»©u SMS):
    - Header: `X-API-Key: <plain_key>`
    - Scopes:
-     - `sms:send` (gửi)
+     - `sms:send` (gá»­i)
      - `sms:read` (xem request/messages)
 
-3) **Agent principal** (cho thiết bị/agent gửi tin):
-   - Header: `Authorization: Bearer <agent_token>` (token **không** có dấu `.`)
-   - Dùng cho: agent/*.
+3) **Agent principal** (cho thiáº¿t bá»‹/agent gá»­i tin):
+   - Header: `Authorization: Bearer <agent_token>` (token **khÃ´ng** cÃ³ dáº¥u `.`)
+   - DÃ¹ng cho: agent/*.
 
 ## Health
 
-- `GET /health` → `200 {"status":"ok"}`
+- `GET /health` â†’ `200 {"status":"ok"}`
 
 ## Admin: API keys (JWT required)
 
 ### List API keys
 
 - `GET /admin/api-keys`
-- Response: danh sách key (không có `plain_key`)
+- Response: danh sÃ¡ch key (khÃ´ng cÃ³ `plain_key`)
 
 ### Create API key
 
@@ -38,12 +43,26 @@ SMS backend hỗ trợ 3 kiểu principal:
   - `client_name` (required)
   - `scopes` (required, array)
   - `rate_limit_per_day` (optional, int; fallback `APIKEY_RATE_LIMIT_PER_DAY_DEFAULT`)
-- Response `201`: trả thêm `plain_key` (chỉ xuất hiện 1 lần)
+- Response `201`: tráº£ thÃªm `plain_key` (chá»‰ xuáº¥t hiá»‡n 1 láº§n)
 
 ### Disable API key
 
 - `POST /admin/api-keys/{key_id}/disable`
 - Response: `{"status":"ok"}`
+
+### Get registration secret
+
+- `GET /admin/agent/registration-secret` (JWT required)
+- Response:
+  - `{"registration_secret":"...","configured":true}`
+
+### Create/update registration secret
+
+- `PUT /admin/agent/registration-secret` (JWT required)
+- Body:
+  - `registration_secret` (required, string; send empty string to disable)
+- Response:
+  - `{"status":"ok","registration_secret":"...","configured":true}`
 
 ## Templates (JWT required)
 
@@ -58,23 +77,23 @@ SMS backend hỗ trợ 3 kiểu principal:
 - Body:
   - `name` (required)
   - `content` (required)
-  - `variables` (optional; nếu không có sẽ auto extract từ content)
+  - `variables` (optional; náº¿u khÃ´ng cÃ³ sáº½ auto extract tá»« content)
   - `description` (optional)
-- Response `201`: template (mặc định `approved=false`)
+- Response `201`: template (máº·c Ä‘á»‹nh `approved=false`)
 
 ### Update template
 
 - `PUT /templates/{template_id}`
 - Body (partial):
   - `name`, `content`, `variables`, `description`
-  - Nếu update `content` thì template sẽ bị set `approved=false` và recompute `variables` (nếu không truyền `variables`).
+  - Náº¿u update `content` thÃ¬ template sáº½ bá»‹ set `approved=false` vÃ  recompute `variables` (náº¿u khÃ´ng truyá»n `variables`).
 
 ### Approve template
 
 - `POST /templates/{template_id}/approve`
-- Response: template với `approved=true`
+- Response: template vá»›i `approved=true`
 
-## SMS requests/messages (API key hoặc JWT tùy endpoint)
+## SMS requests/messages (API key hoáº·c JWT tÃ¹y endpoint)
 
 ### Create request (API key scope `sms:send`)
 
@@ -82,33 +101,42 @@ SMS backend hỗ trợ 3 kiểu principal:
 - Headers: `X-API-Key: ...`
 - Body:
   - `template_id` (required)
-  - `messages` (required, array; tối đa `MAX_RECIPIENTS_PER_REQUEST`)
-    - mỗi item:
-      - `to` (required; sẽ normalize)
-      - `variables` (optional; merge với `variables` ở root)
-      - `schedule_at` (optional ISO8601; nếu không có tz sẽ coi UTC)
+  - `agent_id` (required; ObjectId cua agent nhan job)
+  - `messages` (required, array; tá»‘i Ä‘a `MAX_RECIPIENTS_PER_REQUEST`)
+    - má»—i item:
+      - `to` (required; sáº½ normalize)
+      - `variables` (optional; merge vá»›i `variables` á»Ÿ root)
+      - `schedule_at` (optional ISO8601; náº¿u khÃ´ng cÃ³ tz sáº½ coi UTC)
       - `priority` (optional `HIGH|NORMAL|LOW`)
-  - `variables` (optional object; default vars cho mọi message)
-  - `priority` (optional `HIGH|NORMAL|LOW`; default cho message nếu message không set)
+  - `variables` (optional object; default vars cho má»i message)
+  - `priority` (optional `HIGH|NORMAL|LOW`; default cho message náº¿u message khÃ´ng set)
   - `metadata` (optional)
 - Logic:
-  - Template phải `approved=true`.
-  - Chống trùng gần đây: nếu cùng `to` + `text` trong cửa sổ `ANTI_DUP_MINUTES` → message bị `CANCELED` và `last_error=DUPLICATE_RECENT`.
-  - Rate limit theo ngày: nếu `usage_today + accepted > rate_limit_per_day` → `429`.
+  - Template pháº£i `approved=true`.
+  - Chá»‘ng trÃ¹ng gáº§n Ä‘Ã¢y: náº¿u cÃ¹ng `to` + `text` trong cá»­a sá»• `ANTI_DUP_MINUTES` â†’ message bá»‹ `CANCELED` vÃ  `last_error=DUPLICATE_RECENT`.
+  - Rate limit theo ngÃ y: náº¿u `usage_today + accepted > rate_limit_per_day` â†’ `429`.
 - Response `201`:
-  - `{"request_id":"...","total_created":<accepted>,"total_skipped":<duplicate_count>}`
+  - `{"request_id":"...","agent_id":"...","total_created":<accepted>,"total_skipped":<duplicate_count>}`
 
-### Request detail (JWT hoặc API key scope `sms:read`)
+### Request detail (JWT hoáº·c API key scope `sms:read`)
 
 - `GET /requests/{request_id}`
-- Nếu dùng API key: chỉ xem được request của chính API key đó (khác → `403`).
+- Náº¿u dÃ¹ng API key: chá»‰ xem Ä‘Æ°á»£c request cá»§a chÃ­nh API key Ä‘Ã³ (khÃ¡c â†’ `403`).
 - Response:
   - `{"request_id":"...","template_id":"...","total_created":...,"total_skipped":...,"created_at":"...","status_counts":{"PENDING":1,...}}`
 
-### List messages (JWT hoặc API key scope `sms:read`)
+### List messages (JWT hoáº·c API key scope `sms:read`)
 
 - `GET /messages?request_id=...&status=...&limit=50&skip=0`
-- `request_id` là bắt buộc.
+- `request_id` lÃ  báº¯t buá»™c.
+- Response:
+  - `{"items":[...], "count": <len>}`
+
+### List all messages (JWT hoáº·c API key scope `sms:read`)
+
+- `GET /messages/all?status=...&request_id=...&agent_id=...&to=...&limit=50&skip=0`
+- CÃ¡c query param lÃ  tÃ¹y chá»n.
+- Náº¿u dÃ¹ng API key: chá»‰ nhÃ¬n tháº¥y tin nháº¯n cá»§a API key Ä‘Ã³.
 - Response:
   - `{"items":[...], "count": <len>}`
 
@@ -116,9 +144,9 @@ Message object:
 
 ```json
 {
-  "message_id": "…",
-  "request_id": "…",
-  "to": "+8490…",
+  "message_id": "â€¦",
+  "request_id": "â€¦",
+  "to": "+8490â€¦",
   "status": "PENDING|ASSIGNED|SENDING|SENT|DELIVERED|FAILED|CANCELED",
   "priority": "HIGH|NORMAL|LOW",
   "priority_weight": 0,
@@ -126,8 +154,8 @@ Message object:
   "lease_until": null,
   "agent_id": null,
   "last_error": null,
-  "created_at": "…",
-  "updated_at": "…"
+  "created_at": "â€¦",
+  "updated_at": "â€¦"
 }
 ```
 
@@ -136,14 +164,14 @@ Message object:
 ### Register / rotate token
 
 - `POST /agent/register`
-- Auth: không bắt buộc; nếu gửi `Authorization: Bearer <agent_token>` thì sẽ update agent hiện tại.
+- Auth: khÃ´ng báº¯t buá»™c; náº¿u gá»­i `Authorization: Bearer <agent_token>` thÃ¬ sáº½ update agent hiá»‡n táº¡i.
 - Body:
   - `device_id` (required)
   - `label` (optional)
   - `capabilities` (optional)
   - `rate_limit_per_min` (optional)
-  - `registration_secret` (optional; nếu `AGENT_REGISTRATION_SECRET` được bật)
-  - `rotate_token` (optional true/1/"true") cho trường hợp device_id đã tồn tại
+  - `registration_secret` (optional; náº¿u `AGENT_REGISTRATION_SECRET` Ä‘Æ°á»£c báº­t)
+  - `rotate_token` (optional true/1/"true") cho trÆ°á»ng há»£p device_id Ä‘Ã£ tá»“n táº¡i
 - Response:
   - new: `201 {"status":"ok","agent_id":"...","agent_token":"..."}`
   - exists: `200 {"status":"exists","agent_id":"..."}`
@@ -158,6 +186,7 @@ Message object:
 ### Lease jobs
 
 - `GET /agent/jobs/next?limit=50` (agent token required; max 200)
+- Server chi lease message co `agent_id` trung voi agent dang goi.
 - Response:
   - `{"batch_id":"...","lease_seconds":<int>,"rate_limit_per_min":<int>,"messages":[{"message_id":"...","to":"...","text":"...","priority":"...","schedule_at":"..."}]}`
 
@@ -168,7 +197,7 @@ Message object:
   - `{"messages":[{"message_id":"...","status":"SENT|FAILED|DELIVERED|...","last_error":"..."}]}`
 - Response: `{"updated": <int>}`
 
-Ghi chú: server chỉ chấp nhận một số transition status (ví dụ `PENDING→ASSIGNED/SENDING/SENT/FAILED`, `SENT→DELIVERED`, ...).
+Ghi chÃº: server chá»‰ cháº¥p nháº­n má»™t sá»‘ transition status (vÃ­ dá»¥ `PENDINGâ†’ASSIGNED/SENDING/SENT/FAILED`, `SENTâ†’DELIVERED`, ...).
 
 ## Reports (JWT required)
 

@@ -94,6 +94,8 @@ MONGO_DB = os.environ.get("MONGO_DB", "sms_gateway")
 JWT_SECRET = os.environ.get("JWT_SECRET", "jwt-secret")
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_MINUTES = int(os.environ.get("JWT_ACCESS_MINUTES", "240"))
+JWT_ISSUER = os.environ.get("JWT_ISSUER", "").strip()
+JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE", "").strip()
 
 LEASE_SECONDS = int(os.environ.get("LEASE_SECONDS", "300"))
 AGENT_RATE_LIMIT_PER_MIN = int(os.environ.get("AGENT_RATE_LIMIT_PER_MIN", "10"))

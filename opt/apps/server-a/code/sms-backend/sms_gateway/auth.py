@@ -113,8 +113,21 @@ class JWTAuthentication(authentication.BaseAuthentication):
         if "." not in token:
             return None
 
+        decode_kwargs = {
+            "key": settings.JWT_SECRET,
+            "algorithms": [settings.JWT_ALGORITHM],
+            "options": {
+                "verify_aud": bool(getattr(settings, "JWT_AUDIENCE", "")),
+                "verify_iss": bool(getattr(settings, "JWT_ISSUER", "")),
+            },
+        }
+        if getattr(settings, "JWT_AUDIENCE", ""):
+            decode_kwargs["audience"] = settings.JWT_AUDIENCE
+        if getattr(settings, "JWT_ISSUER", ""):
+            decode_kwargs["issuer"] = settings.JWT_ISSUER
+
         try:
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+            payload = jwt.decode(token, **decode_kwargs)
         except jwt.ExpiredSignatureError as exc:
             raise exceptions.AuthenticationFailed("Token expired") from exc
         except jwt.InvalidTokenError as exc:

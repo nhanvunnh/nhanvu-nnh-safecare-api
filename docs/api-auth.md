@@ -1,5 +1,10 @@
 # Auth Module API (auth-backend)
 
+Backend URL cố định:
+
+- Dev: `http://192.168.1.5:8090`
+- Prod: `https://api.safecare.vn`
+
 Base path production (theo `BASE_PATH`): `/auth`
 
 Ngoài ra còn có healthcheck không prefix: `GET /health`.
@@ -149,4 +154,3 @@ Ghi chú: User `Root` chỉ có thể bị chỉnh bởi principal level `Root`.
   "updatedAt": "…"
 }
 ```
-
