@@ -109,6 +109,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./image/.env
+    volumes:
+      - ./image/secrets/safedatabase-a88bf902aa78.json:/run/secrets/safedatabase-a88bf902aa78.json:ro
     command: >
       sh -c "python manage.py create_indexes &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60"
