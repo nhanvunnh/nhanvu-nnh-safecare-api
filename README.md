@@ -15,6 +15,8 @@ Hệ thống Server A phục vụ domain `api.safecare.vn` với MongoDB dùng c
 ## Deploy guides
 
 - `LIGHTSAIL_UBUNTU_DEPLOY_GUIDE.md`
+- `docs/DEPLOY_GNH_SERVICE_WINDOWS_UBUNTU.md`
+- `docs/DEPLOY_SHEET_SYNC_SERVICE_WINDOWS_UBUNTU.md`
 
 ## Directory layout
 

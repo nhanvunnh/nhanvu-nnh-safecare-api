@@ -1,0 +1,116 @@
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-secret")
+DEBUG = os.environ.get("DJANGO_DEBUG", "0").lower() in {"1", "true", "yes"}
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "*").split(",") if host.strip()]
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "sheet_sync_gateway",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+WSGI_APPLICATION = "config.wsgi.application"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    }
+]
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Asia/Ho_Chi_Minh"
+USE_I18N = True
+USE_TZ = True
+STATIC_URL = "static/"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (),
+    "DEFAULT_PERMISSION_CLASSES": (),
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+    ),
+}
+
+APP_NAME = os.environ.get("APP_NAME", "sheet-sync")
+APP_ENV = os.environ.get("APP_ENV", "development")
+BASE_PATH = os.environ.get("BASE_PATH", "/sheet").strip()
+if BASE_PATH and not BASE_PATH.startswith("/"):
+    BASE_PATH = f"/{BASE_PATH}"
+BASE_PATH = BASE_PATH.rstrip("/") or ""
+
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://shared_mongo:27017")
+MONGO_DB = os.environ.get("MONGO_DB", "db_sheet_sync")
+SYNC_MONGO_URI = os.environ.get("SYNC_MONGO_URI", MONGO_URI)
+
+JWT_SECRET = os.environ.get("JWT_SECRET", SECRET_KEY)
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+
+INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN", "")
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get(
+    "GOOGLE_SERVICE_ACCOUNT_FILE",
+    str(BASE_DIR / "secrets" / "google-service-account.json"),
+)
+
+DEFAULT_GNH_ENABLED = os.environ.get("DEFAULT_GNH_ENABLED", "1").lower() in {"1", "true", "yes"}
+DEFAULT_GNH_SHEET_NAME = os.environ.get("DEFAULT_GNH_SHEET_NAME", "NVC-GIAONHANHANG")
+DEFAULT_GNH_WORKSHEET_NAME = os.environ.get("DEFAULT_GNH_WORKSHEET_NAME", "GNH")
+DEFAULT_GNH_TARGET_DB = os.environ.get("DEFAULT_GNH_TARGET_DB", "db_gnh")
+DEFAULT_GNH_TARGET_COLLECTION = os.environ.get("DEFAULT_GNH_TARGET_COLLECTION", "gnh_sheet")
+DEFAULT_GNH_KEY_FIELD = os.environ.get("DEFAULT_GNH_KEY_FIELD", "MA_GIAO_NHAN")
+DEFAULT_GNH_UPDATED_AT_FIELD = os.environ.get("DEFAULT_GNH_UPDATED_AT_FIELD", "UPDATED_AT")
+DEFAULT_GNH_DATE_FORMAT = os.environ.get("DEFAULT_GNH_DATE_FORMAT", "%d/%m/%Y %H:%M:%S")
+DEFAULT_GNH_FIELDS = [
+    f.strip()
+    for f in os.environ.get(
+        "DEFAULT_GNH_FIELDS",
+        "MA_GIAO_NHAN,TEN_KHACH_HANG,SO_DIEN_THOAI,MA_CAN_HO,THU_HOI,MA_GIAO_HANG,MA_KHO,VI_TRI,NGAY_NHAN,NGAY_GIAO,GIA_TIEN,HINH_NHAN,HINH_GIAO,NOI_DUNG_GOI_HANG,GIAO_HANG,TINH_TRANG,GIO_NHAN,GIO_GIAO,GHI_CHU,LOAI_VE,HTTT,UPDATED_AT",
+    ).split(",")
+    if f.strip()
+]
+
+USE_X_FORWARDED_HOST = os.environ.get("USE_X_FORWARDED_HOST", "false").lower() in {"1", "true", "yes"}
+proxy_header = os.environ.get("SECURE_PROXY_SSL_HEADER")
+if proxy_header:
+    header_parts = [part.strip() for part in proxy_header.split(",") if part.strip()]
+    SECURE_PROXY_SSL_HEADER = tuple(header_parts[:2]) if len(header_parts) >= 2 else None
+else:
+    SECURE_PROXY_SSL_HEADER = None
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]

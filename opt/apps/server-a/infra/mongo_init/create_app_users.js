@@ -4,7 +4,9 @@ const apps = [
   { dbName: "db_shop", user: "shop_user", passEnv: "SHOP_DB_PASS" },
   { dbName: "db_laydi", user: "laydi_user", passEnv: "LAYDI_DB_PASS" },
   { dbName: "db_core", user: "core_user", passEnv: "CORE_DB_PASS" },
-  { dbName: "db_image", user: "image_user", passEnv: "IMAGE_DB_PASS" }
+  { dbName: "db_image", user: "image_user", passEnv: "IMAGE_DB_PASS" },
+  { dbName: "db_gnh", user: "gnh_user", passEnv: "GNH_DB_PASS" },
+  { dbName: "db_sheet_sync", user: "sheet_sync_user", passEnv: "SHEET_SYNC_DB_PASS" }
 ];
 
 apps.forEach(({ dbName, user, passEnv }) => {

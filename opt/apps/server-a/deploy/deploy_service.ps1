@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet("auth", "sms", "shop", "laydi", "core", "image")]
+    [ValidateSet("auth", "sms", "shop", "laydi", "core", "image", "gnh", "sheet-sync")]
     [string]$ServiceName,
 
     [Parameter(ValueFromRemainingArguments = $true)]
