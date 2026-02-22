@@ -153,3 +153,30 @@ class PasswordResetToken(Document):
     def mark_used(self) -> None:
         self.used = True
         self.save()
+
+
+class ApiToken(Document):
+    name = StringField(required=True)
+    token = StringField(required=True, unique=True)
+    scope = StringField(required=True, choices=["read", "write", "admin"], default="read")
+    note = StringField(required=False)
+    isActive = BooleanField(default=True)
+    expiresAt = DateTimeField(required=False)
+    lastUsedAt = DateTimeField(required=False)
+    createdBy = StringField(required=False)
+    createdAt = DateTimeField(default=utils.utcnow)
+    updatedAt = DateTimeField(default=utils.utcnow)
+
+    meta = {
+        "collection": "api_tokens",
+        "indexes": [
+            {"fields": ["token"], "unique": True},
+            {"fields": ["isActive", "scope"]},
+            {"fields": ["expiresAt"]},
+            {"fields": ["createdAt"]},
+        ],
+    }
+
+    def save(self, *args, **kwargs):
+        self.updatedAt = utils.utcnow()
+        return super().save(*args, **kwargs)

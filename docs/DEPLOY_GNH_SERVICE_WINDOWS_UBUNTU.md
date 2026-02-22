@@ -276,3 +276,8 @@ docker compose -f docker-compose.prod.yml down
 Neu can rollback ve image cu:
 - checkout commit truoc do
 - `./deploy_service.sh gnh` (Ubuntu) hoac `.\deploy_service.ps1 gnh` (Windows)
+
+## 11) Tham khao mapping URL khi tach server
+
+- Xem: `docs/SERVICE_URL_MAPPING_SPLIT_SERVERS.md`
+- Muc tieu: doi URL lien service (`auth`, `image`, `sheet-sync`) chi bang env, khong sua code.

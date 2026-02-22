@@ -28,6 +28,14 @@ class SyncEngine:
     def _normalize(value):
         return str(value or "").strip()
 
+    @staticmethod
+    def _dt_naive_utc(value):
+        if not isinstance(value, datetime.datetime):
+            return None
+        if value.tzinfo is not None:
+            return value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        return value
+
     def _parse_sheet_dt(self, value, date_format):
         text = self._normalize(value)
         if not text:
@@ -135,7 +143,7 @@ class SyncEngine:
         now = utcnow()
         for key_val, (_, row_dict) in sheet_map.items():
             doc = db_map.get(key_val)
-            sheet_updated = self._parse_sheet_dt(row_dict.get(updated_at_field), date_format)
+            sheet_updated = self._dt_naive_utc(self._parse_sheet_dt(row_dict.get(updated_at_field), date_format))
 
             if not doc:
                 data = {f: row_dict.get(f, "") for f in fields if f != updated_at_field}
@@ -144,14 +152,15 @@ class SyncEngine:
                 inserted_db += 1
                 db_map[key_val] = data
             else:
-                db_updated = doc.get(updated_at_field)
+                db_updated = self._dt_naive_utc(doc.get(updated_at_field))
                 if (not db_updated) or (sheet_updated and sheet_updated > db_updated):
+                    update_data = {updated_at_field: sheet_updated or now}
+                    # Keep behavior: only overwrite business fields when row content changed.
                     if self._rows_diff(header, row_dict, doc, updated_at_field):
-                        update_data = {f: row_dict.get(f, "") for f in fields if f != updated_at_field}
-                        update_data[updated_at_field] = sheet_updated or now
-                        col.update_one({key_field: key_val}, {"$set": update_data})
-                        doc.update(update_data)
-                        updated_db += 1
+                        update_data.update({f: row_dict.get(f, "") for f in fields if f != updated_at_field})
+                    col.update_one({key_field: key_val}, {"$set": update_data})
+                    doc.update(update_data)
+                    updated_db += 1
 
         db_docs = list(col.find({}, {"_id": 0}))
         db_map = {self._normalize(d.get(key_field, "")): d for d in db_docs if d.get(key_field)}
@@ -170,10 +179,12 @@ class SyncEngine:
                 continue
 
             row_idx, row_dict = sheet_map[key_val]
-            sheet_updated = self._parse_sheet_dt(row_dict.get(updated_at_field), date_format)
-            db_updated = doc.get(updated_at_field)
+            sheet_updated = self._dt_naive_utc(self._parse_sheet_dt(row_dict.get(updated_at_field), date_format))
+            db_updated = self._dt_naive_utc(doc.get(updated_at_field))
             if (not sheet_updated) or (db_updated and db_updated > sheet_updated):
-                if self._rows_diff(header, row_dict, doc, updated_at_field):
+                row_changed = self._rows_diff(header, row_dict, doc, updated_at_field)
+                time_changed = bool(db_updated and (not sheet_updated or db_updated > sheet_updated))
+                if row_changed or time_changed:
                     update_payload.append(
                         {
                             "range": f"A{row_idx}:{last_col}{row_idx}",

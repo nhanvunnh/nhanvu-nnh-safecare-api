@@ -82,6 +82,12 @@ SYNC_MONGO_URI = os.environ.get("SYNC_MONGO_URI", MONGO_URI)
 
 JWT_SECRET = os.environ.get("JWT_SECRET", SECRET_KEY)
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+AUTH_API_VERIFY_ENABLED = os.environ.get("AUTH_API_VERIFY_ENABLED", "1").lower() in {"1", "true", "yes"}
+AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://svc_auth:8000").rstrip("/")
+AUTH_API_VERIFY_URL = os.environ.get("AUTH_API_VERIFY_URL", f"{AUTH_SERVICE_URL}/auth/v1/auth/api-tokens/verify")
+AUTH_API_VERIFY_HOST = os.environ.get("AUTH_API_VERIFY_HOST", "").strip()
+AUTH_API_VERIFY_TIMEOUT = int(os.environ.get("AUTH_API_VERIFY_TIMEOUT", "10"))
+AUTH_API_VERIFY_FALLBACK_LOCAL = os.environ.get("AUTH_API_VERIFY_FALLBACK_LOCAL", "1").lower() in {"1", "true", "yes"}
 
 INTERNAL_SERVICE_TOKEN = os.environ.get("INTERNAL_SERVICE_TOKEN", "")
 GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get(

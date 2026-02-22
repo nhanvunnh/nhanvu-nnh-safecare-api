@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
+from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.test.utils import override_settings
 from mongoengine import connect, disconnect
@@ -170,3 +173,36 @@ class SocialLinkTests(MongoTestCase):
             email_verified=True,
         )
         self.assertEqual(user.id, linked.id)
+
+
+class DefaultAdminCommandTests(MongoTestCase):
+    def test_create_default_admin_creates_user(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DEFAULT_ADMIN_ENABLED": "1",
+                "DEFAULT_ADMIN_EMAIL": "admin.seed@example.com",
+                "DEFAULT_ADMIN_PASSWORD": "Password1!",
+                "DEFAULT_ADMIN_FULL_NAME": "Seed Admin",
+                "DEFAULT_ADMIN_GROUPS": "ADMIN",
+            },
+            clear=False,
+        ):
+            call_command("create_default_admin")
+        user = User.objects(email="admin.seed@example.com").first()
+        self.assertIsNotNone(user)
+        self.assertEqual(user.level, LEVEL_ADMIN)
+        self.assertEqual(user.groups, ["ADMIN"])
+
+    def test_create_default_admin_requires_password(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DEFAULT_ADMIN_ENABLED": "1",
+                "DEFAULT_ADMIN_EMAIL": "admin.seed@example.com",
+                "DEFAULT_ADMIN_PASSWORD": "",
+            },
+            clear=False,
+        ):
+            with self.assertRaises(CommandError):
+                call_command("create_default_admin")

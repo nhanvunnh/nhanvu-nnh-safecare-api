@@ -56,3 +56,23 @@
 
 ## Tham khảo
 - Xem README và LOCAL_TEST_GUIDE.md để biết thêm chi tiết.
+
+## Docker: create_default_admin
+
+- Run manually inside Docker container:
+  ```bash
+  cd opt/apps/server-a/code/auth-backend
+  docker compose -f docker-compose.prod.yml exec auth python manage.py create_default_admin
+  ```
+
+## Troubleshooting
+
+- Error: `Unknown command: 'create_default_admin'`
+  - Cause: container/image is old and does not include the new command.
+  - Fix:
+  ```bash
+  cd opt/apps/server-a/code/auth-backend
+  docker compose -f docker-compose.prod.yml down
+  docker compose -f docker-compose.prod.yml up --build -d
+  docker compose -f docker-compose.prod.yml exec auth python manage.py create_default_admin
+  ```

@@ -1,4 +1,5 @@
 import jwt
+import requests
 from django.conf import settings
 
 from gnh_gateway.constants import has_scope
@@ -17,6 +18,23 @@ def decode_user_token(token: str):
 
 def verify_api_token(token: str, required_scope: str = "read") -> bool:
     if not token:
+        return False
+
+    # Prefer centralized token verification from auth service.
+    if settings.AUTH_API_VERIFY_ENABLED:
+        try:
+            resp = requests.post(
+                settings.AUTH_API_VERIFY_URL,
+                json={"token": token, "requiredScope": required_scope},
+                timeout=max(1, settings.AUTH_API_VERIFY_TIMEOUT),
+            )
+            if resp.status_code < 500:
+                body = resp.json()
+                return bool(body.get("active", False))
+        except Exception:
+            pass
+
+    if not settings.AUTH_API_VERIFY_FALLBACK_LOCAL:
         return False
 
     doc = get_collection(COL_API_TOKEN).find_one({"token": token, "isActive": True})

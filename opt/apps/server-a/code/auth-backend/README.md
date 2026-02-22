@@ -9,7 +9,7 @@ auth-backend/
 ├── config/                 # Django project
 ├── auth_service/           # Domain logic (models, APIs, OAuth, RBAC)
 ├── common_auth/            # Copy-ready helpers for other services
-├── management/commands/    # create_indexes, seed_defaults
+├── management/commands/    # create_indexes, seed_defaults, create_default_admin
 ├── tests/                  # Django test suite (mongomock)
 ├── Dockerfile
 ├── docker-compose.yml      # Local dev (backend + mongo)
@@ -31,6 +31,7 @@ Copy `.env.example` to `.env` before running locally. Key settings:
 | `GOOGLE_CLIENT_ID/SECRET`, `MS_CLIENT_ID/SECRET/MS_TENANT` | OAuth credentials. |
 | `EMAIL_*`, `PASSWORD_RESET_URL` | SMTP settings for forgot-password flow. |
 | `RATE_LIMIT_LOGIN_PER_MINUTE`, `RATE_LIMIT_FORGOT_PER_HOUR` | Built-in throttling knobs. |
+| `DEFAULT_ADMIN_*` | Optional bootstrap account (set `DEFAULT_ADMIN_ENABLED=1`). |
 
 ## Local development
 
@@ -39,7 +40,18 @@ cp .env.example .env
 docker compose up --build -d
 docker compose exec backend python manage.py create_indexes
 docker compose exec backend python manage.py seed_defaults
+docker compose exec backend python manage.py create_default_admin
 curl http://localhost:8001/health
+```
+
+### Run `create_default_admin` manually in Docker
+
+```bash
+# Local compose (service: backend)
+docker compose exec backend python manage.py create_default_admin
+
+# Prod compose file (service: auth)
+docker compose -f docker-compose.prod.yml exec auth python manage.py create_default_admin
 ```
 
 The local compose stack exposes Django on `http://localhost:8001`. API URLs mirror production but without TLS, e.g. `http://localhost:8001/auth/v1/auth/login`.
@@ -48,7 +60,7 @@ The local compose stack exposes Django on `http://localhost:8001`. API URLs mirr
 
 1. Sync this folder into `opt/apps/server-a/code/auth-backend` on the host.
 2. Populate `opt/apps/server-a/services/auth/.env` with production secrets (template already committed).
-3. Run `./deploy_service.sh auth` from `opt/apps/server-a/deploy`. The compose file builds from `../../code/auth-backend`, runs `create_indexes` + `seed_defaults`, then starts Gunicorn on port 8000 attached to `proxy-network` + `infra-network`.
+3. Run `./deploy_service.sh auth` from `opt/apps/server-a/deploy`. The compose file builds from `../../code/auth-backend`, runs `create_indexes` + `seed_defaults` + `create_default_admin`, then starts Gunicorn on port 8000 attached to `proxy-network` + `infra-network`.
 4. In Nginx Proxy Manager, add custom location `/auth` → `svc_auth:8000` with rewrite `^/auth/(.*)$ /$1 break;`.
 5. Validate via `curl https://api.safecare.vn/auth/health`.
 
@@ -121,3 +133,19 @@ python manage.py test
 ```
 
 Coverage includes cookie contracts, RBAC gates, introspection, and social linking logic.
+
+## Troubleshooting
+
+- `Unknown command: 'create_default_admin'`:
+  - Container/image is still old and does not include the new command.
+  - Rebuild and restart, then retry:
+
+```bash
+# local compose
+docker compose down
+docker compose up --build -d
+
+# prod compose
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml up --build -d
+```

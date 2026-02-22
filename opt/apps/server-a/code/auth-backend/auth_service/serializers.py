@@ -102,6 +102,27 @@ class OAuthStateSerializer(serializers.Serializer):
     redirect = serializers.URLField(required=False)
 
 
+class ApiTokenCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=128)
+    scope = serializers.ChoiceField(choices=["read", "write", "admin"], default="read")
+    note = serializers.CharField(required=False, allow_blank=True)
+    expiresDays = serializers.IntegerField(required=False, min_value=1, max_value=3650)
+    token = serializers.CharField(required=False, allow_blank=True, max_length=512)
+
+
+class ApiTokenUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False, max_length=128)
+    scope = serializers.ChoiceField(required=False, choices=["read", "write", "admin"])
+    note = serializers.CharField(required=False, allow_blank=True)
+    isActive = serializers.BooleanField(required=False)
+    expiresAt = serializers.DateTimeField(required=False, allow_null=True)
+
+
+class ApiTokenVerifySerializer(serializers.Serializer):
+    token = serializers.CharField()
+    requiredScope = serializers.ChoiceField(required=False, choices=["read", "write", "admin"], default="read")
+
+
 def serialize_user(user, perms: set[str] | None = None) -> dict[str, Any]:
     payload = {
         "id": str(user.id),

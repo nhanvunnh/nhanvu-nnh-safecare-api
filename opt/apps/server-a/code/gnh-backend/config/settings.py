@@ -83,6 +83,11 @@ MONGO_DB = os.environ.get("MONGO_DB", "db_gnh")
 
 JWT_SECRET = os.environ.get("JWT_SECRET", SECRET_KEY)
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+AUTH_API_VERIFY_ENABLED = os.environ.get("AUTH_API_VERIFY_ENABLED", "1").lower() in {"1", "true", "yes"}
+AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://svc_auth:8000").rstrip("/")
+AUTH_API_VERIFY_URL = os.environ.get("AUTH_API_VERIFY_URL", f"{AUTH_SERVICE_URL}/auth/v1/auth/api-tokens/verify")
+AUTH_API_VERIFY_TIMEOUT = int(os.environ.get("AUTH_API_VERIFY_TIMEOUT", "10"))
+AUTH_API_VERIFY_FALLBACK_LOCAL = os.environ.get("AUTH_API_VERIFY_FALLBACK_LOCAL", "1").lower() in {"1", "true", "yes"}
 
 GNH_SHEET_NAME = os.environ.get("GNH_SHEET_NAME", "NVC-GIAONHANHANG")
 GNH_WORKSHEET_NAME = os.environ.get("GNH_WORKSHEET_NAME", "GNH")
@@ -93,9 +98,11 @@ GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get(
 GNH_SYNC_INTERVAL = int(os.environ.get("GNH_SYNC_INTERVAL", "30"))
 GNH_SYNC_LOOP = os.environ.get("GNH_SYNC_LOOP", "0").lower() in {"1", "true", "yes"}
 
-IMAGE_SERVICE_BASE_URL = os.environ.get("IMAGE_SERVICE_BASE_URL", "http://svc_image:8000").rstrip("/")
+IMAGE_SERVICE_URL = os.environ.get("IMAGE_SERVICE_URL", os.environ.get("IMAGE_SERVICE_BASE_URL", "http://svc_image:8000")).rstrip("/")
+IMAGE_SERVICE_BASE_URL = IMAGE_SERVICE_URL
 SHEET_SYNC_ENABLED = os.environ.get("SHEET_SYNC_ENABLED", "1").lower() in {"1", "true", "yes"}
-SHEET_SYNC_BASE_URL = os.environ.get("SHEET_SYNC_BASE_URL", "http://svc_sheet_sync:8000/sheet")
+SHEET_SYNC_SERVICE_URL = os.environ.get("SHEET_SYNC_SERVICE_URL", os.environ.get("SHEET_SYNC_BASE_URL", "http://svc_sheet_sync:8000/sheet")).rstrip("/")
+SHEET_SYNC_BASE_URL = SHEET_SYNC_SERVICE_URL
 SHEET_SYNC_SERVICE_TOKEN = os.environ.get("SHEET_SYNC_SERVICE_TOKEN", "")
 
 USE_X_FORWARDED_HOST = os.environ.get("USE_X_FORWARDED_HOST", "false").lower() in {"1", "true", "yes"}

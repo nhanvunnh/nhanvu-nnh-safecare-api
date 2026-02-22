@@ -154,3 +154,49 @@ Ghi chú: User `Root` chỉ có thể bị chỉnh bởi principal level `Root`.
   "updatedAt": "…"
 }
 ```
+
+## API Tokens (v1)
+
+Cac API nay dung cho quan tri token ky thuat. Yeu cau user dang nhap co level `Admin` tro len.
+
+- `GET /auth/v1/api-tokens`
+  - Query:
+    - `page` (default 1), `pageSize` (default 20, max 100)
+    - `scope` (optional): `read|write|admin`
+    - `isActive` (optional): `true|false`
+  - Response: `{"ok": true, "data": [...], "page": 1, "pageSize": 20, "total": 10}`
+
+- `POST /auth/v1/api-tokens`
+  - Body:
+    - `name` (required)
+    - `scope` (optional): `read|write|admin`, default `read`
+    - `note` (optional)
+    - `expiresDays` (optional, int > 0)
+    - `token` (optional, neu bo qua se auto-generate)
+  - Response:
+    - `201 {"ok": true, "token": {..., "token": "<plain-token>"}}`
+  - Luu y: plain token chi nen copy ngay luc tao.
+
+- `GET /auth/v1/api-tokens/{token_id}`
+  - Response: `{"ok": true, "token": {...}}`
+
+- `PATCH /auth/v1/api-tokens/{token_id}`
+  - Body (partial):
+    - `name`, `scope`, `note`, `isActive`, `expiresAt`
+  - Response: `{"ok": true, "token": {...}}`
+
+- `POST /auth/v1/api-tokens/{token_id}/toggle`
+  - Response: `{"ok": true, "token": {...}}`
+
+- `DELETE /auth/v1/api-tokens/{token_id}`
+  - Response: `{"ok": true}`
+
+### API token verify (for service-to-service)
+
+- `POST /auth/v1/auth/api-tokens/verify` (AllowAny)
+- Body:
+  - `token` (required)
+  - `requiredScope` (optional): `read|write|admin`, default `read`
+- Response:
+  - Invalid/inactive/expired/insufficient scope: `{"ok": true, "active": false}`
+  - Valid: `{"ok": true, "active": true, "scope": "write", "name": "gnh-internal", "expiresAt": null}`

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from auth_service.constants import STATUS_ACTIVE, STATUS_BANNED
-from auth_service.views import auth_api, group_api, health, oauth_api, user_api
+from auth_service.views import api_token_api, auth_api, group_api, health, oauth_api, user_api
 
 urlpatterns = [
     path("health", health.health_view, name="prefixed-health"),
@@ -12,6 +12,7 @@ urlpatterns = [
     path("v1/auth/reset-password", auth_api.ResetPasswordView.as_view()),
     path("v1/auth/change-password", auth_api.ChangePasswordView.as_view()),
     path("v1/auth/introspect", auth_api.IntrospectView.as_view()),
+    path("v1/auth/api-tokens/verify", api_token_api.ApiTokenVerifyView.as_view()),
     path("v1/users/me", user_api.UserMeView.as_view()),
     path("v1/users", user_api.UserCollectionView.as_view()),
     path("v1/users/<str:user_id>", user_api.UserDetailView.as_view()),
@@ -22,6 +23,9 @@ urlpatterns = [
     path("v1/groups", group_api.GroupCollectionView.as_view()),
     path("v1/groups/<str:code>", group_api.GroupDetailView.as_view()),
     path("v1/groups/<str:code>/perms", group_api.GroupPermissionView.as_view()),
+    path("v1/api-tokens", api_token_api.ApiTokenCollectionView.as_view()),
+    path("v1/api-tokens/<str:token_id>", api_token_api.ApiTokenDetailView.as_view()),
+    path("v1/api-tokens/<str:token_id>/toggle", api_token_api.ApiTokenToggleView.as_view()),
     path("v1/oauth/google/start", oauth_api.GoogleOAuthStart.as_view(), name="oauth-google-start"),
     path("v1/oauth/google/callback", oauth_api.GoogleOAuthCallback.as_view(), name="oauth-google-callback"),
     path("v1/oauth/microsoft/start", oauth_api.MicrosoftOAuthStart.as_view(), name="oauth-microsoft-start"),

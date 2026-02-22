@@ -12,7 +12,16 @@ Dich vu API GNH theo cau truc server-a.
 
 ## Auth
 - Ho tro `api_token` (scope `read`/`write`/`admin`) trong body.
+  - `gnh` verify `api_token` qua auth service endpoint `/auth/v1/auth/api-tokens/verify`.
+  - Fallback local token chi dung khi auth service khong san sang (theo env `AUTH_API_VERIFY_FALLBACK_LOCAL`).
 - Fallback token nguoi dung qua truong `token` (JWT) trong body.
+
+## Bien URL lien service
+- `AUTH_SERVICE_URL` (vd `http://svc_auth:8000`)
+- `AUTH_API_VERIFY_URL` (override endpoint verify, neu can)
+- `IMAGE_SERVICE_URL` (vd `http://svc_image:8000`)
+- `SHEET_SYNC_SERVICE_URL` (vd `http://svc_sheet_sync:8000/sheet`)
+- `SHEET_SYNC_BASE_URL` / `IMAGE_SERVICE_BASE_URL` duoc giu de tuong thich nguoc.
 
 ## Field GNH
 - `MA_GIAO_NHAN`, `TEN_KHACH_HANG`, `SO_DIEN_THOAI`, `MA_CAN_HO`, `THU_HOI`, `MA_GIAO_HANG`, `MA_KHO`, `VI_TRI`, `NGAY_NHAN`, `NGAY_GIAO`, `GIA_TIEN`, `HINH_NHAN`, `HINH_GIAO`, `NOI_DUNG_GOI_HANG`, `GIAO_HANG`, `TINH_TRANG`, `GIO_NHAN`, `GIO_GIAO`, `GHI_CHU`, `LOAI_VE`, `HTTT`, `UPDATED_AT`
@@ -259,9 +268,16 @@ Response:
   "data": [
     {
       "timeCreate": "21/02/2026 11:20:11",
+      "app_code": "gnh",
       "direction": "manual",
       "status": "success",
-      "message": "db_insert=0 db_update=1 sheet_update=1 sheet_append=0"
+      "message": "db_insert=0 db_update=1 sheet_update=1 sheet_append=0",
+      "stats": {
+        "inserted_db": 0,
+        "updated_db": 1,
+        "updated_sheet": 1,
+        "appended_sheet": 0
+      }
     }
   ],
   "page": 1,

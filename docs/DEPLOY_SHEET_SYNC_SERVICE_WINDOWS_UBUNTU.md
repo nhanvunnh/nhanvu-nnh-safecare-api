@@ -138,3 +138,8 @@ docker compose -f docker-compose.prod.yml down
 cd /opt/apps/nhanvu-nnh-safecare-api/opt/apps/server-a/services/sheet-sync
 docker compose -f docker-compose.prod.yml down
 ```
+
+## 9) Tham khao mapping URL khi tach server
+
+- Xem: `docs/SERVICE_URL_MAPPING_SPLIT_SERVERS.md`
+- Muc tieu: doi URL lien service (`auth`, `image`, `sheet-sync`, `gnh`) chi bang env.
